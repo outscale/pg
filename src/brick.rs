@@ -26,6 +26,10 @@ use nic::Nic;
 use hub::Hub;
 use vhost::Vhost;
 
+// Maybe use a better wrapper of pg_brick raw pointer
+unsafe impl Send for Brick {}
+unsafe impl Sync for Brick {}
+
 pub enum Brick {
     Nop(Nop),
     Firewall(Firewall),
