@@ -109,7 +109,6 @@ impl<'a> Brick {
         }
     }
 
-
     pub fn name(&self) -> String {
         match *self {
             Brick::Firewall(ref b) => b.name.clone(),
@@ -119,6 +118,18 @@ impl<'a> Brick {
             Brick::Nic(ref b) => b.name.clone(),
             Brick::Hub(ref b) => b.name.clone(),
             Brick::Vhost(ref b) => b.name.clone(),
+        }
+    }
+
+    pub fn type_str(&self) -> &'static str {
+        match *self {
+            Brick::Firewall(_) => "firewall",
+            Brick::Nop(_) => "nop",
+            Brick::Tap(_) => "tap",
+            Brick::Switch(_) => "switch",
+            Brick::Nic(_) => "nic",
+            Brick::Hub(_) => "hub",
+            Brick::Vhost(_) => "vhost",
         }
     }
 
