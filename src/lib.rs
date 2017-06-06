@@ -18,6 +18,7 @@
 extern crate packetgraph_sys;
 #[macro_use]
 extern crate lazy_static;
+extern crate libc;
 
 pub mod error;
 pub mod brick;

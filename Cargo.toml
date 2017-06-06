@@ -6,3 +6,4 @@ authors = ["jerome.jutteau <jerome.jutteau@outscale.com>"]
 [dependencies]
 packetgraph-sys = { git = "https://github.com/outscale/packetgraph-sys.git" }
 lazy_static = "0.2"
+libc = "0.2.23"

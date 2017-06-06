@@ -47,7 +47,18 @@ impl Graph {
 
     pub fn dot(&mut self) -> Result<String, Error> {
         match self.bricks.iter_mut().next() {
-            Some((_, b)) => b.dot(),
+            Some((_, b)) => Ok(b.dot()),
+            None => {
+                let mut e = Error::new();
+                e.set("no brick available in graph");
+                return Err(e);
+            }
+        }
+    }
+
+    pub fn svg(&mut self) -> Result<String, Error> {
+        match self.bricks.iter_mut().next() {
+            Some((_, b)) => b.svg(),
             None => {
                 let mut e = Error::new();
                 e.set("no brick available in graph");

@@ -17,7 +17,7 @@
 
 use error::Error;
 use packetgraph_sys::{pg_brick, pg_brick_link, pg_brick_unlink_edge, pg_brick_unlink,
-                      pg_brick_poll, pg_brick_dot_mem};
+                      pg_brick_poll, pg_brick_dot};
 use nop::Nop;
 use firewall::Firewall;
 use tap::Tap;
@@ -25,6 +25,11 @@ use switch::Switch;
 use nic::Nic;
 use hub::Hub;
 use vhost::Vhost;
+use std::process::{Command, Stdio};
+use std::error::Error as StdErr;
+use std::io::prelude::*;
+use std::ffi::CStr;
+use libc;
 
 // Maybe use a better wrapper of pg_brick raw pointer
 unsafe impl Send for Brick {}
@@ -145,18 +150,48 @@ impl<'a> Brick {
         }
     }
 
-    pub fn dot(&mut self) -> Result<String, Error> {
-        let mut error = Error::new();
-        let mut v = vec![0u8; 1_000_000];
+    pub fn dot(&mut self) -> String {
         unsafe {
-            if pg_brick_dot_mem(self.get_brick(),
-                                v.as_mut_ptr() as *mut ::std::os::raw::c_char,
-                                1_000_000,
-                                &mut error.ptr) < 0 {
-                return Err(error);
-            }
+            let raw_c_string = pg_brick_dot(self.get_brick());
+            let ret = CStr::from_ptr(raw_c_string).to_string_lossy().into_owned();
+            libc::free(raw_c_string as *mut libc::c_void);
+            return ret;
         }
-        Ok(String::from_utf8(v).unwrap())
+    }
+
+    pub fn svg(&mut self) -> Result<String, Error> {
+        let mut err = Error::new();
+        let dot = self.dot();
+        let process = match Command::new("dot")
+                  .stdin(Stdio::piped())
+                  .stdout(Stdio::piped())
+                  .arg("-Tsvg")
+                  .spawn() {
+            Err(e) => {
+                err.set(format!("cannot spawn dot: {}", e.description()));
+                return Err(err);
+            }
+            Ok(p) => p,
+        };
+
+        match process.stdin.unwrap().write_all(dot.as_bytes()) {
+            Err(e) => {
+                err.set(format!("cannot write dot stdin: {}", e.description()));
+                return Err(err);
+            }
+            Ok(_) => {}
+        };
+
+        let mut out = String::new();
+        match process.stdout.unwrap().read_to_string(&mut out) {
+            Err(e) => {
+                err.set(format!("cannot read dot stdout: {}", e.description()));
+                return Err(err);
+            }
+            Ok(_) => {}
+        }
+
+        return Ok(out);
     }
 
     // TODO: use macro ?
@@ -253,7 +288,8 @@ mod tests {
         assert!(!nop2.pollable());
         tap1.poll().unwrap();
         tap2.poll().unwrap();
-        tap1.dot().unwrap();
+        tap1.dot();
+        tap1.svg().unwrap();
     }
 
     #[test]
