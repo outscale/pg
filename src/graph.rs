@@ -44,6 +44,17 @@ impl Graph {
         self.bricks.insert(brick.name(), brick);
         return self;
     }
+
+    pub fn dot(&mut self) -> Result<String, Error> {
+        match self.bricks.iter_mut().next() {
+            Some((_, b)) => b.dot(),
+            None => {
+                let mut e = Error::new();
+                e.set("no brick available in graph");
+                return Err(e);
+            }
+        }
+    }
 }
 
 #[cfg(test)]

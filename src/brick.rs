@@ -17,7 +17,7 @@
 
 use error::Error;
 use packetgraph_sys::{pg_brick, pg_brick_link, pg_brick_unlink_edge, pg_brick_unlink,
-                      pg_brick_poll};
+                      pg_brick_poll, pg_brick_dot_mem};
 use nop::Nop;
 use firewall::Firewall;
 use tap::Tap;
@@ -145,6 +145,20 @@ impl<'a> Brick {
         }
     }
 
+    pub fn dot(&mut self) -> Result<String, Error> {
+        let mut error = Error::new();
+        let mut v = vec![0u8; 1_000_000];
+        unsafe {
+            if pg_brick_dot_mem(self.get_brick(),
+                                v.as_mut_ptr() as *mut ::std::os::raw::c_char,
+                                1_000_000,
+                                &mut error.ptr) < 0 {
+                return Err(error);
+            }
+        }
+        Ok(String::from_utf8(v).unwrap())
+    }
+
     // TODO: use macro ?
     pub fn firewall(&mut self) -> Option<&mut Firewall> {
         match *self {
@@ -239,6 +253,7 @@ mod tests {
         assert!(!nop2.pollable());
         tap1.poll().unwrap();
         tap2.poll().unwrap();
+        tap1.dot().unwrap();
     }
 
     #[test]
