@@ -42,13 +42,13 @@ pub use nic::Nic;
 pub use hub::Hub;
 pub use vhost::Vhost;
 
+use std::env;
 use std::ffi::CString;
 use std::sync::Mutex;
 use packetgraph_sys::{pg_start_str, pg_side};
 
 lazy_static! {
-    static ref DPDK_OPTS: Mutex<String> = Mutex::new(
-        String::from("-c1 -n1 --no-huge --no-shconf --lcores 0,1 -l 0,1"));
+    static ref DPDK_OPTS: Mutex<String> = Mutex::new(String::new());
     static ref DPDK_OK: Mutex<bool> = Mutex::new(false);
 }
 
@@ -60,7 +60,13 @@ pub fn set_dpdk_params<S: Into<String>>(params: S) {
 pub fn init() {
     let mut ok = DPDK_OK.lock().unwrap();
     if !*ok {
-        let dpdk_opt = DPDK_OPTS.lock().unwrap();
+        let mut dpdk_opt = DPDK_OPTS.lock().unwrap();
+        if dpdk_opt.len() == 0 {
+            *dpdk_opt = match env::var("PG_DPDK_OPTS") {
+                Ok(s) => s,
+                Err(_) => String::from("-c1 -n1 --no-huge --no-shconf --lcores 0,1 -l 0,1"),
+            };
+        }
         let params = CString::new(dpdk_opt.as_str()).unwrap();
         if unsafe { pg_start_str(params.as_ptr()) } < 0 {
             panic!("Cannot init packetgraph with dpdk parameters {}, adjust with set_dpdk_params()",
