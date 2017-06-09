@@ -45,6 +45,7 @@ pub use vhost::Vhost;
 use std::env;
 use std::ffi::CString;
 use std::sync::Mutex;
+use std::str::FromStr;
 use packetgraph_sys::{pg_start_str, pg_side};
 
 lazy_static! {
@@ -87,6 +88,20 @@ impl Into<pg_side> for Side {
         match self {
             Side::West => pg_side::PG_WEST_SIDE,
             Side::East => pg_side::PG_EAST_SIDE,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum ParseError {InvalidSide}
+
+impl FromStr for Side {
+    type Err = ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "west" => Ok(Side::West),
+            "east" => Ok(Side::East),
+            _ => Err(ParseError::InvalidSide),
         }
     }
 }
