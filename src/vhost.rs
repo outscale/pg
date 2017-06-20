@@ -18,10 +18,11 @@
 use error::Error;
 use std::ffi::CString;
 use packetgraph_sys::{pg_brick, pg_brick_destroy, pg_vhost_new, pg_vhost_start,
-                      PG_VHOST_USER_CLIENT, PG_VHOST_USER_NO_RECONNECT,
+                      pg_vhost_socket_path, PG_VHOST_USER_CLIENT, PG_VHOST_USER_NO_RECONNECT,
                       PG_VHOST_USER_DEQUEUE_ZERO_COPY};
 
 use std::sync::Mutex;
+use std::ffi::CStr;
 
 lazy_static! {
     static ref VHOST_INITIALIZED: Mutex<bool> = Mutex::new(false);
@@ -75,6 +76,19 @@ impl Vhost {
     pub fn pollable(&self) -> bool {
         true
     }
+
+    pub fn path(&self) -> Result<String, Error> {
+        let mut error = Error::new();
+        unsafe {
+            let p = pg_vhost_socket_path(self.brick, &mut error.ptr);
+            if error.is_set() {
+                return Err(error);
+            }
+
+            let path = CStr::from_ptr(p).to_string_lossy().into_owned();
+            return Ok(path);
+        }
+    }
 }
 
 impl Drop for Vhost {
@@ -94,8 +108,10 @@ mod tests {
     #[test]
     fn rings() {
         init();
-        let vhost1 = Vhost::new("vhost", VHOST_USER_NO_RECONNECT).unwrap();
-        let vhost2 = Vhost::new("vhost", VHOST_USER_NO_RECONNECT).unwrap();
+        let vhost1 = Vhost::new("vhost1", VHOST_USER_NO_RECONNECT).unwrap();
+        let vhost2 = Vhost::new("vhost2", VHOST_USER_NO_RECONNECT).unwrap();
+        vhost1.path().unwrap();
+        vhost2.path().unwrap();
         let mut b1 = Brick::Vhost(vhost1);
         let mut b2 = Brick::Vhost(vhost2);
         b1.link(&mut b2).unwrap();
