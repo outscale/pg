@@ -49,7 +49,7 @@ impl Nic {
         let mut error = Error::new();
         let b = unsafe {
             Nic {
-                brick: pg_nic_new_by_id(cname.as_ptr(), port, &mut error.ptr),
+                brick: pg_nic_new_by_id(cname.as_ptr(), port as u16, &mut error.ptr),
                 name: name,
             }
         };
