@@ -80,7 +80,7 @@ impl Vhost {
     pub fn path(&self) -> Result<String, Error> {
         let mut error = Error::new();
         unsafe {
-            let p = pg_vhost_socket_path(self.brick, &mut error.ptr);
+            let p = pg_vhost_socket_path(self.brick);
             if error.is_set() {
                 return Err(error);
             }
