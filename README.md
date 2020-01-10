@@ -5,6 +5,10 @@ Pg is a [Rust](https://www.rust-lang.org/) wrapper of C library [packetgraph](ht
 This lib do not implement all packetgraph nor is considered as stable.
 So don't really pay attention to it at the moment.
 
+# Contributions
+
+No contribution is accepted at the moment on the project
+
 # License: GPLv3
 
 > Copyright 2017 Outscale SAS
