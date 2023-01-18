@@ -1,4 +1,5 @@
 # PacketGraph Rust library
+[![Project Archived](https://docs.outscale.com/fr/userguide/_images/Project-Archived-red.svg)](https://docs.outscale.com/en/userguide/Open-Source-Projects.html)
 
 Pg is a [Rust](https://www.rust-lang.org/) wrapper of C library [packetgraph](https://github.com/outscale/packetgraph).
 
